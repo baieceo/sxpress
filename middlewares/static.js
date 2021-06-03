@@ -18,6 +18,9 @@ module.exports = function (req, res, next) {
 
   // 处理静态资源，配置过静态资源目录，请求路径为文件类型，在MIME_TYPES有命中
   if (self._static && extname && MIME_TYPES[extname]) {
+    // 设置异步标识
+    self._async = true;
+
     // 解析文件路径
     var pathParseUrl = path.parse(req.url);
     // 拼接文件路径
@@ -28,21 +31,21 @@ module.exports = function (req, res, next) {
     );
 
     fs.access(filePath, function (error) {
+      self._ended = true;
+
       // 文件不存在返回404
       if (error && error.code === 'ENOENT') {
         return self._response.end('Not Found 404');
       }
 
       // 创建读取流
-      const rs = fs.createReadStream(filePath);
+      const readStream = fs.createReadStream(filePath);
 
       // 设置输出content-type
       self._response.writeHead(200, { 'content-type': MIME_TYPES[extname] });
 
-      res._ended = true;
-
       // 通过管道输出流
-      rs.pipe(res);
+      readStream.pipe(self._response);
     });
   } else {
     next();

@@ -13,6 +13,8 @@ function Sxpress() {
   this._routerInstance = new SxpressRouter();  // 存储路由实例对象
   this._middlewareList = []; // 存储中间件函数
   this._middlewareIndex = 0;  // 存储中间件计数
+  this._ended = false;  // 是否返回数据
+  this._async = false;  // 是否异步处理结束
 }
 
 // 初始化
@@ -20,6 +22,10 @@ Sxpress.prototype.init = function (req, res) {
   this._request = req;
   this._response = res;
   this._response.send = this.send;
+  this._ended = false;
+  this._async = false;
+  this._middlewareIndex = 0;
+  this._routerInstance.init(this._request, this._response);
 };
 
 // 创建http服务
@@ -34,28 +40,43 @@ Sxpress.prototype.createServer = function () {
 
     // 初始化Sxpress
     self.init(req, res);
-    self._routerInstance.init(self._request, self._response);
-
-    // 重置中间件计数索引
-    self._middlewareIndex = 0;
 
     // 运行中间件
     if (self._middlewareList.length) {
       self.next();
     }
 
+    if (self._ended) {
+      return false;
+    }
+
     // 处理路由
-    if (self._routerInstance && self._routerInstance._routerList.length) {
+    if (self._routerInstance._routerList.length) {
       var urlParse = url.parse(req.url);
       var pathname = urlParse.pathname;
+      var router = null;
 
       // 查找路由
       for (var i = 0; i < self._routerInstance._routerList.length; i++) {
-        var router = self._routerInstance._routerList[i];
+        if (self._routerInstance._routerList[i].method === req.method && self._routerInstance._routerList[i].path === pathname) {
+          router = self._routerInstance._routerList[i];
 
-        if (router.method === req.method && router.path === pathname) {
-          return router.handler(self._request, self._response);
+          break;
         }
+      }
+
+      if (router) {
+        // 查找到路由
+        return router.handler(self._request, self._response);
+      } else if (!router && !self._async) {
+        // 未查找到路由, 且不是异步
+        return res.end('Not Found 404');
+      } else if (self._async) {
+        // 异步不处理
+        return false;
+      } else {
+        // 返回默认文本
+        return res.end('sxpress');
       }
     } else {
       res.end('sxpress');
@@ -67,7 +88,7 @@ Sxpress.prototype.createServer = function () {
 Sxpress.prototype.next = function () {
   var self = this;
 
-  if (this._response._ended) return false;
+  if (this._ended) return false;
 
   var middleware = this._middlewareList[this._middlewareIndex++];
 
