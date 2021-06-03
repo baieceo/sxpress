@@ -14,7 +14,7 @@ function Sxpress() {
   this._middlewareList = []; // 存储中间件函数
   this._middlewareIndex = 0;  // 存储中间件计数
   this._ended = false;  // 是否返回数据
-  this._async = false;  // 是否异步处理结束
+  this._async = false;  // 是否异步处理
 }
 
 // 初始化
