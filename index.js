@@ -10,11 +10,14 @@ function Sxpress() {
   this._request = null; // 存储请求体
   this._response = null; // 存储响应体
   this._httpServer = null; // 存储http服务
-  this._routerInstance = new SxpressRouter();  // 存储路由实例对象
+  this._routerInstance = new SxpressRouter(); // 存储路由实例对象
   this._middlewareList = []; // 存储中间件函数
-  this._middlewareIndex = 0;  // 存储中间件计数
-  this._ended = false;  // 是否返回数据
-  this._async = false;  // 是否异步处理
+  this._middlewareIndex = 0; // 存储中间件计数
+  this._ended = false; // 是否返回数据
+  this._async = false; // 是否异步处理
+  this._responseCode = 200; // 响应体code
+  this._responseHeaders = {}; // 响应体headers
+  this._responseCookies = []; // 响应体cookies
 }
 
 // 初始化
@@ -26,6 +29,9 @@ Sxpress.prototype.init = function (req, res) {
   this._async = false;
   this._middlewareIndex = 0;
   this._routerInstance.init(this._request, this._response);
+  this._responseCode = 200;
+  this._responseHeaders = {};
+  this._responseCookies = [];
 };
 
 // 创建http服务
@@ -58,7 +64,10 @@ Sxpress.prototype.createServer = function () {
 
       // 查找路由
       for (var i = 0; i < self._routerInstance._routerList.length; i++) {
-        if (self._routerInstance._routerList[i].method === req.method && self._routerInstance._routerList[i].path === pathname) {
+        if (
+          self._routerInstance._routerList[i].method === req.method &&
+          self._routerInstance._routerList[i].path === pathname
+        ) {
           router = self._routerInstance._routerList[i];
 
           break;
@@ -70,16 +79,16 @@ Sxpress.prototype.createServer = function () {
         return router.handler(self._request, self._response);
       } else if (!router && !self._async) {
         // 未查找到路由, 且不是异步
-        return res.end('Not Found 404');
+        return res.send('Not Found 404');
       } else if (self._async) {
         // 异步不处理
         return false;
       } else {
         // 返回默认文本
-        return res.end('sxpress');
+        return res.send('sxpress');
       }
     } else {
-      res.end('sxpress');
+      res.send('sxpress');
     }
   });
 };
@@ -149,19 +158,55 @@ Sxpress.prototype.delete = function (path, callback) {
 
 // 输出函数
 Sxpress.prototype.send = function (data) {
+  var sxpressInstance = global.sxpressInstance;
+  var responseCookies = sxpressInstance._responseCookies;
+  var code = sxpressInstance._responseCode;
+  var headers = sxpressInstance._responseHeaders;
+  var cookie;
+  var cookies = []; // cookies数组
+  var cookieItems = [];
+
   this._ended = true;
+
+  // 处理cookie
+  if (responseCookies.length) {
+    for (var i = 0; i < responseCookies.length; i++) {
+      cookie = responseCookies[i];
+      cookieItems = [];
+
+      cookieItems.push(cookie.key + '=' + cookie.value);
+
+      for (var key in cookie.options) {
+        if (cookie.options[key] !== false) {
+          cookieItems.push(key + '=' + cookie.options[key]);
+        }
+      }
+
+      cookies.push(cookieItems.join('; '));
+    }
+
+    headers['Set-Cookie'] = cookies;
+  }
 
   // 文本
   if (typeof data === 'string') {
+    headers['Content-Type'] = 'text/plain';
+
+    this.writeHead(code, headers);
+
     return this.end(data);
   }
 
   // 对象
   if (typeof data === 'object') {
-    this.writeHead(200, { 'content-type': 'application/json' });
+    headers['Content-Type'] = 'application/json';
+
+    this.writeHead(code, headers);
 
     return this.end(JSON.stringify(data));
   }
+
+  this.writeHead(code, headers);
 
   this.end(data);
 };
@@ -169,7 +214,7 @@ Sxpress.prototype.send = function (data) {
 // 创建实例
 if (!global.sxpressInstance) {
   global.sxpressInstance = new Sxpress();
-  
+
   // 创建http服务
   global.sxpressInstance.createServer();
 }
