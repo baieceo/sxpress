@@ -1,26 +1,27 @@
 {
-  "_from": "sxpress@^1.0.1",
-  "_id": "sxpress@1.0.1",
+  "_from": "sxpress",
+  "_id": "sxpress@1.0.2",
   "_inBundle": false,
-  "_integrity": "sha512-JIj+ne7bgNKGMja9rt3jX0+az2mcrjtnAt8DLUe0LSa2SsbLKtKxZcygSQlqoLtmLWWltNaf3MLHLJbRxkyvdg==",
+  "_integrity": "sha512-r0OERpc1vWkXQh14t8QFtIlsM7S9/myR+mTMdPBOLRcPC8E/YSPuqEG1EilzaqMYbNXCS+2FyPhf2SrUkugjRQ==",
   "_location": "/sxpress",
   "_phantomChildren": {},
   "_requested": {
-    "type": "range",
+    "type": "tag",
     "registry": true,
-    "raw": "sxpress@^1.0.1",
+    "raw": "sxpress",
     "name": "sxpress",
     "escapedName": "sxpress",
-    "rawSpec": "^1.0.1",
+    "rawSpec": "",
     "saveSpec": null,
-    "fetchSpec": "^1.0.1"
+    "fetchSpec": "latest"
   },
   "_requiredBy": [
-    "#DEV:/"
+    "#DEV:/",
+    "#USER"
   ],
-  "_resolved": "https://registry.npmjs.org/sxpress/-/sxpress-1.0.1.tgz",
-  "_shasum": "35aabdb369a382040ef5ac0bbefb7ff2fd9da99b",
-  "_spec": "sxpress@^1.0.1",
+  "_resolved": "https://registry.npmjs.org/sxpress/-/sxpress-1.0.0.tgz",
+  "_shasum": "514f7ad38d14b85fdaeb7224c8bf5be68c91501e",
+  "_spec": "sxpress",
   "_where": "C:\\workspace\\cmc\\server\\examples\\sxpress",
   "author": {
     "name": "baieceo"
